@@ -7,10 +7,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import type { Task } from "@/lib/api";
 import { formatCreatedAt, formatDueDate, isOverdue } from "@/lib/format";
 
-export function TaskTable({ tasks }: { tasks: Task[] }) {
+type Props = {
+  tasks: Task[];
+  onEdit: (task: Task) => void;
+  onDelete: (task: Task) => void;
+};
+
+export function TaskTable({ tasks, onEdit, onDelete }: Props) {
   if (tasks.length === 0) {
     return (
       <div className="rounded-lg border border-dashed p-12 text-center">
@@ -31,6 +38,7 @@ export function TaskTable({ tasks }: { tasks: Task[] }) {
             <TableHead>Status</TableHead>
             <TableHead>Due date</TableHead>
             <TableHead>Created</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -64,6 +72,18 @@ export function TaskTable({ tasks }: { tasks: Task[] }) {
               </TableCell>
               <TableCell className="text-muted-foreground">
                 {formatCreatedAt(task.createdAt)}
+              </TableCell>
+              <TableCell className="space-x-2 text-right">
+                <Button variant="outline" size="sm" onClick={() => onEdit(task)}>
+                  Edit
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => onDelete(task)}
+                >
+                  Delete
+                </Button>
               </TableCell>
             </TableRow>
           ))}

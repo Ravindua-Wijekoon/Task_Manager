@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { DeleteTaskDialog } from "@/components/delete-task-dialog";
+import { TaskFormDialog } from "@/components/task-form-dialog";
 import { TaskTable } from "@/components/task-table";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,6 +13,13 @@ export function TasksManager() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Dialog state. The task stays set while the dialog closes so it doesn't flicker
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
 
   // Bump this number to fetch the list again
   const [reloadKey, setReloadKey] = useState(0);
@@ -43,9 +52,31 @@ export function TasksManager() {
     setReloadKey((key) => key + 1);
   }
 
+  function openCreate() {
+    setEditingTask(null);
+    setDialogOpen(true);
+  }
+
+  function openEdit(task: Task) {
+    setEditingTask(task);
+    setDialogOpen(true);
+  }
+
+  function openDelete(task: Task) {
+    setTaskToDelete(task);
+    setDeleteOpen(true);
+  }
+
+  function refresh() {
+    setReloadKey((key) => key + 1);
+  }
+
   return (
     <main className="mx-auto w-full max-w-4xl space-y-6 p-6">
-      <h1 className="text-2xl font-semibold">Tasks</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Tasks</h1>
+        <Button onClick={openCreate}>New task</Button>
+      </div>
 
       {loading ? (
         <div className="space-y-2" aria-busy="true" aria-label="Loading tasks">
@@ -65,8 +96,22 @@ export function TasksManager() {
           </Button>
         </div>
       ) : (
-        <TaskTable tasks={tasks} />
+        <TaskTable tasks={tasks} onEdit={openEdit} onDelete={openDelete} />
       )}
+
+      <TaskFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        task={editingTask}
+        onSaved={refresh}
+      />
+
+      <DeleteTaskDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        task={taskToDelete}
+        onDeleted={refresh}
+      />
     </main>
   );
 }
