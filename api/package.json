@@ -17,6 +17,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "seed": "prisma db seed",
     "test:e2e": "DATABASE_URL=file:./test.db prisma migrate deploy && DATABASE_URL=file:./test.db jest --config ./test/jest-e2e.json --runInBand"
   },
   "dependencies": {
@@ -72,5 +73,8 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   }
 }

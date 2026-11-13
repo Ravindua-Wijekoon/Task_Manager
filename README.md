@@ -33,6 +33,7 @@ cd api
 npm install
 cp .env.example .env
 npx prisma migrate deploy
+npm run seed          # optional: adds sample tasks
 npm run start:dev
 ```
 
@@ -40,6 +41,7 @@ The API runs at http://localhost:3001.
 
 - `npm install` also generates the Prisma client.
 - `npx prisma migrate deploy` creates the SQLite database file (`api/prisma/dev.db`) and its tables.
+- `npm run seed` is optional. It adds 6 sample tasks, and does nothing if the database already has tasks.
 
 ### 2. Frontend (web)
 
