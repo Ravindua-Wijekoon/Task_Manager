@@ -1,0 +1,25 @@
+services:
+  api:
+    build: ./api
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: file:/data/tasks.db
+      PORT: 3001
+      CORS_ORIGIN: http://localhost:3000
+    volumes:
+      # Keeps the SQLite file when the container is recreated
+      - api-data:/data
+
+  web:
+    build:
+      context: ./web
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3001
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  api-data:
