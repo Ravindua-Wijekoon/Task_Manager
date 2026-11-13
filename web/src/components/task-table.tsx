@@ -15,15 +15,21 @@ type Props = {
   tasks: Task[];
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
+  // True when a filter is hiding tasks, so the empty message can say so
+  filtered?: boolean;
 };
 
-export function TaskTable({ tasks, onEdit, onDelete }: Props) {
+export function TaskTable({ tasks, onEdit, onDelete, filtered }: Props) {
   if (tasks.length === 0) {
     return (
       <div className="rounded-lg border border-dashed p-12 text-center">
-        <p className="font-medium">No tasks yet</p>
+        <p className="font-medium">
+          {filtered ? "No tasks match this filter" : "No tasks yet"}
+        </p>
         <p className="text-sm text-muted-foreground">
-          Create your first task to get started.
+          {filtered
+            ? "Try a different status."
+            : "Create your first task to get started."}
         </p>
       </div>
     );

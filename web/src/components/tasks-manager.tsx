@@ -1,12 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DeleteTaskDialog } from "@/components/delete-task-dialog";
+import { TaskFilters } from "@/components/task-filters";
 import { TaskFormDialog } from "@/components/task-form-dialog";
 import { TaskTable } from "@/components/task-table";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getTasks, type Task } from "@/lib/api";
+import {
+  filterAndSort,
+  type SortOrder,
+  type StatusFilter,
+} from "@/lib/task-view";
 
 // Owns the task list: fetches it and decides what to show (loading, error or table)
 export function TasksManager() {
@@ -17,6 +23,13 @@ export function TasksManager() {
   // Dialog state. The task stays set while the dialog closes so it doesn't flicker
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
+  const visibleTasks = useMemo(
+    () => filterAndSort(tasks, statusFilter, sortOrder),
+    [tasks, statusFilter, sortOrder],
+  );
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
@@ -96,7 +109,22 @@ export function TasksManager() {
           </Button>
         </div>
       ) : (
-        <TaskTable tasks={tasks} onEdit={openEdit} onDelete={openDelete} />
+        <>
+          {tasks.length > 0 && (
+            <TaskFilters
+              status={statusFilter}
+              sort={sortOrder}
+              onStatusChange={setStatusFilter}
+              onSortChange={setSortOrder}
+            />
+          )}
+          <TaskTable
+            tasks={visibleTasks}
+            filtered={tasks.length > 0}
+            onEdit={openEdit}
+            onDelete={openDelete}
+          />
+        </>
       )}
 
       <TaskFormDialog
