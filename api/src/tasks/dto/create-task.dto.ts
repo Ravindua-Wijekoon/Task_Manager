@@ -11,7 +11,9 @@ import {
 
 export class CreateTaskDto {
   // Trim spaces first so a title of only spaces counts as empty
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
   @IsString()
   @IsNotEmpty()
   @MaxLength(200)

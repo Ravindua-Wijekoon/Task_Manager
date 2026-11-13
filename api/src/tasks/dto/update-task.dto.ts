@@ -14,7 +14,9 @@ import {
 export class UpdateTaskDto {
   // Only validated when sent, but it can never be null or empty
   @ValidateIf((_, value) => value !== undefined)
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
   @IsString()
   @IsNotEmpty()
   @MaxLength(200)
