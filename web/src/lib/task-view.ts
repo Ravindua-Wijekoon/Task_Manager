@@ -5,6 +5,40 @@ export type SortKey = "title" | "status" | "dueDate" | "createdAt";
 export type SortDirection = "asc" | "desc";
 export type SortState = { key: SortKey; direction: SortDirection };
 export type ViewMode = "table" | "cards";
+export type DateRange = "all" | "week" | "month";
+
+export const DATE_RANGES: { value: DateRange; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "week", label: "This week" },
+  { value: "month", label: "This month" },
+];
+
+// Local date as "YYYY-MM-DD", the same format as the start of a due date string
+function toDateString(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+// First and last day of the range around `now`. The week runs Monday to Sunday.
+function rangeBounds(range: Exclude<DateRange, "all">, now: Date) {
+  let start: Date;
+  let end: Date;
+
+  if (range === "week") {
+    const daysSinceMonday = (now.getDay() + 6) % 7;
+    start = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - daysSinceMonday,
+    );
+    end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
+  } else {
+    start = new Date(now.getFullYear(), now.getMonth(), 1);
+    end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  }
+  return { start: toDateString(start), end: toDateString(end) };
+}
 
 // Choices for the sort dropdown (used in card view, which has no column headings)
 export const SORT_OPTIONS: { value: string; label: string; sort: SortState }[] =
@@ -75,10 +109,24 @@ function compareBy(key: SortKey, a: Task, b: Task): number {
 export function filterAndSort(
   tasks: Task[],
   status: StatusFilter,
+  range: DateRange,
   sort: SortState,
+  now?: Date,
 ): Task[] {
-  const filtered =
+  const byStatus =
     status === "ALL" ? tasks : tasks.filter((task) => task.status === status);
+
+  // Date chips look at the due date, so tasks without one only show under "All"
+  let filtered = byStatus;
+  if (range !== "all") {
+    // Only read the clock when a date chip is chosen
+    const { start, end } = rangeBounds(range, now ?? new Date());
+    filtered = byStatus.filter((task) => {
+      if (!task.dueDate) return false;
+      const due = task.dueDate.slice(0, 10);
+      return due >= start && due <= end;
+    });
+  }
 
   const direction = sort.direction === "asc" ? 1 : -1;
   return [...filtered].sort((a, b) => {

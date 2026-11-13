@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { DeleteTaskDialog } from "@/components/delete-task-dialog";
+import { DateRangeChips } from "@/components/date-range-chips";
 import { EmptyState } from "@/components/empty-state";
 import { ScrollableList } from "@/components/scrollable-list";
 import { TaskCards } from "@/components/task-cards";
 import { TaskFilters } from "@/components/task-filters";
 import { TaskFormDialog } from "@/components/task-form-dialog";
 import { TaskTable } from "@/components/task-table";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ViewToggle } from "@/components/view-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,6 +18,7 @@ import {
   DEFAULT_SORT,
   filterAndSort,
   nextSort,
+  type DateRange,
   type SortKey,
   type SortState,
   type StatusFilter,
@@ -34,10 +37,11 @@ export function TasksManager() {
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [sort, setSort] = useState<SortState>(DEFAULT_SORT);
+  const [dateRange, setDateRange] = useState<DateRange>("all");
   const [view, setView] = useState<ViewMode>("cards");
   const visibleTasks = useMemo(
-    () => filterAndSort(tasks, statusFilter, sort),
-    [tasks, statusFilter, sort],
+    () => filterAndSort(tasks, statusFilter, dateRange, sort),
+    [tasks, statusFilter, dateRange, sort],
   );
 
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -89,6 +93,13 @@ export function TasksManager() {
     setDeleteOpen(true);
   }
 
+  const filtersActive = statusFilter !== "ALL" || dateRange !== "all";
+
+  function clearFilters() {
+    setStatusFilter("ALL");
+    setDateRange("all");
+  }
+
   function refresh() {
     setReloadKey((key) => key + 1);
   }
@@ -123,12 +134,20 @@ export function TasksManager() {
         <>
           {tasks.length > 0 && (
             <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
-              <TaskFilters
-                status={statusFilter}
-                onStatusChange={setStatusFilter}
-                sort={view === "cards" ? sort : undefined}
-                onSortChange={setSort}
-              />
+              <div className="flex flex-wrap items-center gap-3">
+                <TaskFilters
+                  status={statusFilter}
+                  onStatusChange={setStatusFilter}
+                  sort={view === "cards" ? sort : undefined}
+                  onSortChange={setSort}
+                />
+                <DateRangeChips value={dateRange} onChange={setDateRange} />
+                {filtersActive && (
+                  <Button variant="ghost" size="sm" onClick={clearFilters}>
+                    <X /> Clear filters
+                  </Button>
+                )}
+              </div>
               <ViewToggle view={view} onViewChange={setView} />
             </div>
           )}
@@ -136,7 +155,10 @@ export function TasksManager() {
           {/* Only this part scrolls; the header and filters stay in place */}
           <ScrollableList>
             {visibleTasks.length === 0 ? (
-              <EmptyState filtered={tasks.length > 0} />
+              <EmptyState
+                filtered={tasks.length > 0}
+                onClearFilters={clearFilters}
+              />
             ) : view === "table" ? (
               <TaskTable
                 tasks={visibleTasks}

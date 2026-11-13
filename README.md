@@ -7,13 +7,33 @@ A small full-stack Task Manager. Create, edit, filter, sort and delete tasks.
 
 ## Features
 
-- REST API for tasks with input validation (400) and not-found handling (404)
-- Task table with a coloured status badge
+**Tasks**
 - Create and edit tasks in a dialog (title, description, status, due date)
 - Confirmation dialog before deleting
-- Loading, error (with retry) and empty states
-- Toast message when an action succeeds or fails
-- Filter by status, and sort by clicking the Title, Status, Due date or Created heading
+- Toast message (light green or red) when an action succeeds or fails
+- Loading skeletons, an error state with a retry button, and empty states
+
+**Two ways to view tasks**
+- **Cards** (default): each card is colour-coded by status (grey for To do, blue for In progress, green for Done), with the due date, a short description and Edit / Delete buttons
+- **Table**: a status badge on every row and sticky column headings
+- Switch between them with the Table / Cards buttons
+
+**Filter and sort**
+- Filter by status
+- Quick due-date chips: All, This week, This month
+- A Clear filters button (also shown when no task matches)
+- Sort by clicking the Title, Status, Due date or Created heading in the table, or with the sort dropdown in card view
+- Overdue due dates are shown in red
+
+**Interface**
+- Only the task list scrolls; the title, filters and buttons stay in place
+- A glass-style down arrow appears when there are more tasks below
+- Light gray page background and the DM Sans font
+
+**Backend and setup**
+- REST API for tasks with input validation (400) and not-found handling (404)
+- End-to-end API tests
+- Optional seed script with 12 sample tasks
 - Docker Compose setup
 
 ## Prerequisites
@@ -33,7 +53,7 @@ cd api
 npm install
 cp .env.example .env
 npx prisma migrate deploy
-npm run seed          # optional: adds sample tasks
+npm run seed          # optional: adds 12 sample tasks
 npm run start:dev
 ```
 
@@ -135,7 +155,7 @@ npm run test:e2e
 ```
 .
 ├── api/                    NestJS backend
-│   ├── prisma/             Database schema and migrations
+│   ├── prisma/             Database schema, migrations and seed script
 │   ├── src/
 │   │   ├── prisma/         PrismaService and module
 │   │   └── tasks/          Controller, service, DTOs
@@ -143,26 +163,32 @@ npm run test:e2e
 ├── web/                    Next.js frontend
 │   └── src/
 │       ├── app/            Page and layout
-│       ├── components/     Table, dialogs, filters (ui/ holds shadcn components)
-│       └── lib/            API client, formatting, filter/sort helpers
+│       ├── components/     Cards, table, dialogs, filters (ui/ holds shadcn components)
+│       └── lib/            API client, date formatting, filter and sort logic
 └── docker-compose.yml
 ```
 
-## How I used AI
+## How I Approached the Development
 
-I used **Claude Code** (Claude Sonnet) as a coding assistant, working with it step by step. The AI wrote most of the code; I directed the process and reviewed the result.
+I used Claude Code as a supporting development tool during the project. Since I was relatively new to NestJS, I used it to understand unfamiliar concepts, explore implementation approaches, troubleshoot issues, and improve my development workflow.
 
-**How I worked with it**
+**My development approach**
 
-- Before any code was written, I had the assignment broken down into features and phases, with a planned commit for each step.
-- Because I am new to NestJS, I asked for each technology (NestJS, Prisma, class-validator, shadcn/ui and so on) to be explained before using it.
-- I built the project one phase at a time and made each commit myself, so the git history shows small, separate steps.
-- I set the quality rules: no unneeded test files, no leftover boilerplate, and short, plain code comments.
-- The AI suggested SQLite with Prisma, npm, and client-side filtering and sorting; I reviewed and approved them.
+- Started by understanding the assignment requirements and breaking the work into manageable features and development phases.
+- Planned the implementation step by step, keeping the codebase organised and maintaining separate Git commits for each major stage.
+- Focused on understanding the technologies used, including NestJS, Prisma, class-validator, and shadcn/ui, before applying them to the project.
+- Made key technical decisions and reviewed implementation suggestions before incorporating them into the application.
+- Maintained code quality by removing unnecessary boilerplate, avoiding redundant files, and keeping comments short and meaningful.
+- Tested and verified API endpoints using Postman, checking request handling, response structures, validation rules, HTTP status codes, and error handling.
+- Used automated tests and a fresh project clone to verify application functionality and ensure the setup process worked correctly.
 
-**What the AI changed along the way**
+**Technical decisions and improvements**
 
-- Replaced the NestJS 12 scaffold with version 11, because version 12 needs a newer Node.js and failed with the default `npm install`.
-- Pinned `@nestjs/config` to version 4 and Prisma to version 6, because the newest versions broke the Jest tests or changed the setup steps.
-- Wrote the update DTO by hand instead of using `PartialType`, so `title: null` returns a 400 and not a database crash.
-- Removed generated boilerplate (sample controller, default READMEs, demo page) and checked the app with curl, automated tests and a fresh clone.
+During development, I encountered several compatibility and implementation issues that required adjustments:
+
+- Used NestJS 11 instead of the initially generated version 12 to maintain compatibility with the available Node.js environment.
+- Selected stable versions of Prisma and @nestjs/config to avoid setup and testing compatibility issues.
+- Implemented the update DTO manually instead of using PartialType to ensure that invalid values, such as title: null, are rejected through proper validation rather than causing database errors.
+- Used SQLite with Prisma for database management and implemented client-side filtering and sorting based on the project requirements.
+
+Overall, I used AI as a development assistant for guidance and troubleshooting while taking responsibility for understanding the implementation, reviewing technical decisions, managing the development process, testing the APIs, and verifying the final application.
