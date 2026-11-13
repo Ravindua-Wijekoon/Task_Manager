@@ -2,16 +2,24 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { DeleteTaskDialog } from "@/components/delete-task-dialog";
+import { EmptyState } from "@/components/empty-state";
+import { ScrollableList } from "@/components/scrollable-list";
+import { TaskCards } from "@/components/task-cards";
 import { TaskFilters } from "@/components/task-filters";
 import { TaskFormDialog } from "@/components/task-form-dialog";
 import { TaskTable } from "@/components/task-table";
 import { Button } from "@/components/ui/button";
+import { ViewToggle } from "@/components/view-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getTasks, type Task } from "@/lib/api";
 import {
+  DEFAULT_SORT,
   filterAndSort,
-  type SortOrder,
+  nextSort,
+  type SortKey,
+  type SortState,
   type StatusFilter,
+  type ViewMode,
 } from "@/lib/task-view";
 
 // Owns the task list: fetches it and decides what to show (loading, error or table)
@@ -25,10 +33,11 @@ export function TasksManager() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
-  const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
+  const [sort, setSort] = useState<SortState>(DEFAULT_SORT);
+  const [view, setView] = useState<ViewMode>("cards");
   const visibleTasks = useMemo(
-    () => filterAndSort(tasks, statusFilter, sortOrder),
-    [tasks, statusFilter, sortOrder],
+    () => filterAndSort(tasks, statusFilter, sort),
+    [tasks, statusFilter, sort],
   );
 
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -85,45 +94,67 @@ export function TasksManager() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-4xl space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Tasks</h1>
+    <main className="mx-auto flex h-dvh w-full max-w-5xl flex-col gap-6 overflow-hidden p-6">
+      <div className="flex shrink-0 items-center justify-between">
+        <h1 className="text-2xl font-semibold">Tasks Management System</h1>
         <Button onClick={openCreate}>New task</Button>
       </div>
 
       {loading ? (
         <div className="space-y-2" aria-busy="true" aria-label="Loading tasks">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full" />
+            <Skeleton key={i} className="h-12 w-full bg-border" />
           ))}
         </div>
       ) : error ? (
-        <div
-          role="alert"
-          className="space-y-3 rounded-lg border border-destructive/40 p-6 text-center"
-        >
-          <p className="font-medium text-destructive">Could not load tasks</p>
-          <p className="text-sm text-muted-foreground">{error}</p>
-          <Button variant="outline" onClick={retry}>
-            Try again
-          </Button>
+        <div className="flex flex-1 items-center justify-center pb-24">
+          <div
+            role="alert"
+            className="w-full max-w-md space-y-3 rounded-lg border border-destructive/40 bg-card p-8 text-center"
+          >
+            <p className="font-medium text-destructive">Could not load tasks</p>
+            <p className="text-sm text-muted-foreground">{error}</p>
+            <Button variant="outline" onClick={retry}>
+              Try again
+            </Button>
+          </div>
         </div>
       ) : (
         <>
           {tasks.length > 0 && (
-            <TaskFilters
-              status={statusFilter}
-              sort={sortOrder}
-              onStatusChange={setStatusFilter}
-              onSortChange={setSortOrder}
-            />
+            <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
+              <TaskFilters
+                status={statusFilter}
+                onStatusChange={setStatusFilter}
+                sort={view === "cards" ? sort : undefined}
+                onSortChange={setSort}
+              />
+              <ViewToggle view={view} onViewChange={setView} />
+            </div>
           )}
-          <TaskTable
-            tasks={visibleTasks}
-            filtered={tasks.length > 0}
-            onEdit={openEdit}
-            onDelete={openDelete}
-          />
+
+          {/* Only this part scrolls; the header and filters stay in place */}
+          <ScrollableList>
+            {visibleTasks.length === 0 ? (
+              <EmptyState filtered={tasks.length > 0} />
+            ) : view === "table" ? (
+              <TaskTable
+                tasks={visibleTasks}
+                sort={sort}
+                onSortChange={(key: SortKey) =>
+                  setSort((s) => nextSort(s, key))
+                }
+                onEdit={openEdit}
+                onDelete={openDelete}
+              />
+            ) : (
+              <TaskCards
+                tasks={visibleTasks}
+                onEdit={openEdit}
+                onDelete={openDelete}
+              />
+            )}
+          </ScrollableList>
         </>
       )}
 

@@ -13,7 +13,7 @@ A small full-stack Task Manager. Create, edit, filter, sort and delete tasks.
 - Confirmation dialog before deleting
 - Loading, error (with retry) and empty states
 - Toast message when an action succeeds or fails
-- Filter by status and sort by due date
+- Filter by status, and sort by clicking the Title, Status, Due date or Created heading
 - Docker Compose setup
 
 ## Prerequisites
@@ -41,7 +41,7 @@ The API runs at http://localhost:3001.
 
 - `npm install` also generates the Prisma client.
 - `npx prisma migrate deploy` creates the SQLite database file (`api/prisma/dev.db`) and its tables.
-- `npm run seed` is optional. It adds 6 sample tasks, and does nothing if the database already has tasks.
+- `npm run seed` is optional. It adds 12 sample tasks, and does nothing if the database already has tasks.
 
 ### 2. Frontend (web)
 

@@ -23,7 +23,12 @@ type Props = {
 };
 
 // Asks "are you sure?" before a task is deleted
-export function DeleteTaskDialog({ open, onOpenChange, task, onDeleted }: Props) {
+export function DeleteTaskDialog({
+  open,
+  onOpenChange,
+  task,
+  onDeleted,
+}: Props) {
   const [deleting, setDeleting] = useState(false);
 
   async function handleDelete() {

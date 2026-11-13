@@ -1,50 +1,69 @@
 import { StatusBadge } from "@/components/status-badge";
 import {
-  Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Task } from "@/lib/api";
 import { formatCreatedAt, formatDueDate, isOverdue } from "@/lib/format";
+import type { SortKey, SortState } from "@/lib/task-view";
+
+// Keeps the heading row visible while the list scrolls
+const STICKY_HEAD =
+  "sticky top-0 z-10 bg-card shadow-[inset_0_-1px_0_var(--border)] first:rounded-tl-lg last:rounded-tr-lg";
 
 type Props = {
   tasks: Task[];
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
-  // True when a filter is hiding tasks, so the empty message can say so
-  filtered?: boolean;
+  sort: SortState;
+  onSortChange: (key: SortKey) => void;
 };
 
-export function TaskTable({ tasks, onEdit, onDelete, filtered }: Props) {
-  if (tasks.length === 0) {
-    return (
-      <div className="rounded-lg border border-dashed p-12 text-center">
-        <p className="font-medium">
-          {filtered ? "No tasks match this filter" : "No tasks yet"}
-        </p>
-        <p className="text-sm text-muted-foreground">
-          {filtered
-            ? "Try a different status."
-            : "Create your first task to get started."}
-        </p>
-      </div>
-    );
-  }
-
+export function TaskTable({
+  tasks,
+  onEdit,
+  onDelete,
+  sort,
+  onSortChange,
+}: Props) {
   return (
-    <div className="rounded-lg border">
-      <Table>
+    <div className="rounded-lg border bg-card">
+      {/* A plain table: the Table component adds a wrapper that would stop sticky headings */}
+      <table className="w-full caption-bottom text-sm">
         <TableHeader>
           <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Due date</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <SortableHead
+              label="Title"
+              sortKey="title"
+              sort={sort}
+              onSort={onSortChange}
+            />
+            <SortableHead
+              label="Status"
+              sortKey="status"
+              sort={sort}
+              onSort={onSortChange}
+            />
+            <SortableHead
+              label="Due date"
+              sortKey="dueDate"
+              sort={sort}
+              onSort={onSortChange}
+            />
+            <SortableHead
+              label="Created"
+              sortKey="createdAt"
+              sort={sort}
+              onSort={onSortChange}
+            />
+            <TableHead className={`${STICKY_HEAD} text-right`}>
+              Actions
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -80,7 +99,11 @@ export function TaskTable({ tasks, onEdit, onDelete, filtered }: Props) {
                 {formatCreatedAt(task.createdAt)}
               </TableCell>
               <TableCell className="space-x-2 text-right">
-                <Button variant="outline" size="sm" onClick={() => onEdit(task)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onEdit(task)}
+                >
                   Edit
                 </Button>
                 <Button
@@ -94,7 +117,47 @@ export function TaskTable({ tasks, onEdit, onDelete, filtered }: Props) {
             </TableRow>
           ))}
         </TableBody>
-      </Table>
+      </table>
     </div>
+  );
+}
+
+type SortableHeadProps = {
+  label: string;
+  sortKey: SortKey;
+  sort: SortState;
+  onSort: (key: SortKey) => void;
+};
+
+// A column heading you can click to sort by that column
+function SortableHead({ label, sortKey, sort, onSort }: SortableHeadProps) {
+  const active = sort.key === sortKey;
+  const Icon = !active
+    ? ArrowUpDown
+    : sort.direction === "asc"
+      ? ArrowUp
+      : ArrowDown;
+
+  return (
+    <TableHead
+      className={STICKY_HEAD}
+      aria-sort={
+        active
+          ? sort.direction === "asc"
+            ? "ascending"
+            : "descending"
+          : "none"
+      }
+    >
+      <Button
+        variant="ghost"
+        size="sm"
+        className="-ml-2.5"
+        onClick={() => onSort(sortKey)}
+      >
+        {label}
+        <Icon className={active ? undefined : "opacity-40"} />
+      </Button>
+    </TableHead>
   );
 }

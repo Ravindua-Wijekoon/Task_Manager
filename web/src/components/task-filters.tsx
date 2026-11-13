@@ -9,7 +9,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TASK_STATUSES } from "@/lib/api";
-import type { SortOrder, StatusFilter } from "@/lib/task-view";
+import {
+  SORT_OPTIONS,
+  sortToValue,
+  type SortState,
+  type StatusFilter,
+} from "@/lib/task-view";
 
 const STATUS_ITEMS = [
   { value: "ALL", label: "All statuses" },
@@ -19,24 +24,19 @@ const STATUS_ITEMS = [
   })),
 ];
 
-const SORT_ITEMS = [
-  { value: "newest", label: "Newest first" },
-  { value: "due-asc", label: "Due date: soonest" },
-  { value: "due-desc", label: "Due date: latest" },
-];
-
 type Props = {
   status: StatusFilter;
-  sort: SortOrder;
   onStatusChange: (status: StatusFilter) => void;
-  onSortChange: (sort: SortOrder) => void;
+  // Only passed in card view, where there are no column headings to click
+  sort?: SortState;
+  onSortChange?: (sort: SortState) => void;
 };
 
-// Dropdowns to filter the list by status and sort it by due date
+// Dropdowns to filter by status and (in card view) to choose the sort order
 export function TaskFilters({
   status,
-  sort,
   onStatusChange,
+  sort,
   onSortChange,
 }: Props) {
   return (
@@ -44,7 +44,9 @@ export function TaskFilters({
       <Select
         items={STATUS_ITEMS}
         value={status}
-        onValueChange={(value) => value && onStatusChange(value as StatusFilter)}
+        onValueChange={(value) =>
+          value && onStatusChange(value as StatusFilter)
+        }
       >
         <SelectTrigger className="w-44" aria-label="Filter by status">
           <SelectValue />
@@ -58,22 +60,27 @@ export function TaskFilters({
         </SelectContent>
       </Select>
 
-      <Select
-        items={SORT_ITEMS}
-        value={sort}
-        onValueChange={(value) => value && onSortChange(value as SortOrder)}
-      >
-        <SelectTrigger className="w-48" aria-label="Sort tasks">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {SORT_ITEMS.map((item) => (
-            <SelectItem key={item.value} value={item.value}>
-              {item.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {sort && onSortChange && (
+        <Select
+          items={SORT_OPTIONS}
+          value={sortToValue(sort)}
+          onValueChange={(value) => {
+            const option = SORT_OPTIONS.find((o) => o.value === value);
+            if (option) onSortChange(option.sort);
+          }}
+        >
+          <SelectTrigger className="w-48" aria-label="Sort tasks">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {SORT_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
     </div>
   );
 }
